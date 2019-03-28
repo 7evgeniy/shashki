@@ -82,8 +82,8 @@ void MainWindow::update() {
 		_count->setText("");
 	_make->setEnabled(!_game->enabled());
 	_load->setEnabled(!_game->enabled());
-	_store->setEnabled(_game->enabled() && !_game->frozen());
-	_toggle->setEnabled(!_game->lost());
+	_store->setEnabled(_game->enabled() && _game->frozen());
+	_toggle->setEnabled(_game->enabled() && !_game->lost());
 	_drop->setEnabled(_game->enabled());
 	_cut->setEnabled(_game->enabled());
 	_toggle->setChecked(_game->enabled() && !_game->frozen());
