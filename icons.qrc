@@ -9,5 +9,8 @@
         <file>quit.png</file>
         <file>store.png</file>
         <file>toggle.png</file>
+        <file>remove.png</file>
+        <file>board.png</file>
+        <file>add.png</file>
     </qresource>
 </RCC>

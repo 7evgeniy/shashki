@@ -3,11 +3,13 @@
 
 #include <QMainWindow>
 #include <QString>
+#include <QList>
 
 class QAction;
 class QComboBox;
 class QLabel;
 class Game;
+class GameSwitcher;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -25,6 +27,7 @@ public:
 	void drop();
 	void whitePlayerType(int type);
 	void blackPlayerType(int type);
+	void registerNewGame();
 	void flip();
 	void cut();
 private:
@@ -35,12 +38,13 @@ private:
 	QAction *_drop;
 	QComboBox *_white;
 	QComboBox *_black;
+	GameSwitcher *_switcher;
 	QAction *_flip;
 	QAction *_cut;
 	QLabel *_count;
 	QAction *_quit;
 private:
-	Game *_game;
+	QList<Game*> _games;
 };
 
 #endif

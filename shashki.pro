@@ -12,6 +12,7 @@ board_widget.cpp \
 cell.cpp \
 direction.cpp \
 game.cpp \
+game_switcher.cpp \
 gui_player.cpp \
 history_widget.cpp \
 main.cpp \
@@ -29,6 +30,7 @@ board_widget.h \
 cell.h \
 direction.h \
 game.h \
+game_switcher.h \
 gui_player.h \
 history_widget.h \
 main_window.h \

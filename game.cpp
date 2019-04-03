@@ -37,6 +37,19 @@ Game::Game(QObject *parent) : QObject(parent) {
 	notifyGui();
 }
 
+Game* Game::clone() const {
+	Game *other = new Game(parent());
+	other->_project[0] = _project[0];
+	other->_project[1] = _project[1];
+	other->makePlayers();
+	other->_actions = _actions;
+	other->_states = _states;
+	other->_now = _now;
+	other->_frozen = true;
+	other->notifyGui();
+	return other;
+}
+
 // Предусловие: action — один корректный полуход, завершённый командой смены игрока.
 void Game::move(QList<Cell> action) {
 	if (frozen()) {
@@ -116,17 +129,7 @@ void Game::postCommand(Command command) {
 void Game::doMake() {
 	_frozen = false;
 	_buffer.clear();
-	for (int i = 0; i < 2; ++ i) {
-		Player *player = nullptr;
-		switch (_project[i]) {
-		case Human:
-			player = new GuiPlayer(this, _board); break;
-		case Machine:
-			player = new AiPlayer(this); break;
-		}
-		delete _players[i];
-		_players[i] = player;
-	}
+	makePlayers();
 	_board->setFlipped(_project[Role::Black] < _project[Role::White]);
 	_buffer.clear();
 	_actions.clear();
@@ -331,4 +334,18 @@ QComboBox* Game::makePlayerList(Role color) {
 	if (color == Role::Black)
 		combo->setToolTip("Чёрные");
 	return combo;
+}
+
+void Game::makePlayers() {
+	for (int i = 0; i < 2; ++ i) {
+		Player *player = nullptr;
+		switch (_project[i]) {
+		case Human:
+			player = new GuiPlayer(this, _board); break;
+		case Machine:
+			player = new AiPlayer(this); break;
+		}
+		delete _players[i];
+		_players[i] = player;
+	}
 }

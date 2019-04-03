@@ -23,6 +23,7 @@ public:
 	static QComboBox* makePlayerList(Role color);
 public:
 	Game(QObject *parent = nullptr);
+	Game* clone() const;
 	QWidget* centralWidget() const;
 	void move(QList<Cell> action);
 public:
@@ -53,6 +54,8 @@ private:
 	void doDrop();
 	void doCut();
 	void doFlip();
+private:
+	void makePlayers();
 private:
 	static const uint8_t FileHeader[4];
 	static BoardState initialBoard();
