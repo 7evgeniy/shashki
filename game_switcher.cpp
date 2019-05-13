@@ -24,12 +24,12 @@ Game* GameSwitcher::game() const {
 void GameSwitcher::addButton() {
 	int i = _games.count();
 	_actions.append(addAction(QIcon(":/board.png"), QString("Партия №%1").arg(i+1)));
+	_games.append(_games.isEmpty() ? new Game : game()->clone());
+	_games.last()->setParent(this);
 	_actions.last()->setData(i);
 	_actions.last()->setCheckable(true);
 	_actions.last()->setActionGroup(_group);
 	_actions.last()->setChecked(true);
-	_games.append(_games.isEmpty() ? new Game : game()->clone());
-	_games.last()->setParent(this);
 	emit gameCreated();
 }
 
