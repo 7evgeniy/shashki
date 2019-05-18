@@ -18,6 +18,7 @@ public:
 signals:
 	void notifyGui();
 	void gameCreated();
+	void aboutToDrop();
 private:
 	QActionGroup *_group;
 	QList<QAction*> _actions;

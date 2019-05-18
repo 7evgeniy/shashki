@@ -10,8 +10,11 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include "game_switcher.h"
+#include <QStackedWidget>
 
 MainWindow::MainWindow() {
+	_central = new QStackedWidget;
+	setCentralWidget(_central);
 	_make = new QAction(QIcon(":/make.png"), "Запуск игры", this);
 	_load = new QAction(QIcon(":/load.png"), "Загрузка файла", this);
 	_store = new QAction(QIcon(":/store.png"), "Запись в файл", this);
@@ -77,10 +80,15 @@ MainWindow::MainWindow() {
 void MainWindow::registerNewGame() {
 	connect(_switcher->game(), &Game::notifyGui, this, &MainWindow::update);
 	connect(_switcher->game(), &Game::notifyError, this, &MainWindow::tellError);
+	_central->addWidget(_switcher->game()->gameWidget());
+}
+
+void MainWindow::dropOldGame() {
+	_central->removeWidget(_switcher->game()->gameWidget());
 }
 
 void MainWindow::update() {
-	setCentralWidget(_switcher->game()->centralWidget());
+	_central->setCurrentWidget(_switcher->game()->gameWidget());
 	if (_switcher->game()->enabled()) {
 		int white = _switcher->game()->stoneCount(Role::White);
 		int black = _switcher->game()->stoneCount(Role::Black);

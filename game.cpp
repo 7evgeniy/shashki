@@ -20,11 +20,11 @@ const QString Game::CouldntWriteError = "Не получается записа�
 Game::Game(QObject *parent) : QObject(parent) {
 	_board = new BoardWidget;
 	_history = new HistoryWidget;
-	_central = new QWidget;
+	_widget = new QWidget;
 	QVBoxLayout *everything = new QVBoxLayout;
 	everything->addWidget(_board);
 	everything->addWidget(_history);
-	_central->setLayout(everything);
+	_widget->setLayout(everything);
 	_history->setGame(this);
 	connect(this, &Game::notifyGui, _history, &HistoryWidget::update);
 	connect(this, &Game::notifyGui, this, &Game::setupBoard);
@@ -91,7 +91,7 @@ void Game::setFrozen(bool is) {
 void Game::setPlayerType(Role color, PlayerType type) {_project[color] = type;}
 void Game::setFilename(QString filename) {_filename = filename;}
 void Game::stopWriting() {_writing = false; notifyGui();}
-QWidget* Game::centralWidget() const {return _central;}
+QWidget* Game::gameWidget() const {return _widget;}
 bool Game::lost() const {return !enabled() || _states.last().lost();}
 bool Game::enabled() const {return !_states.isEmpty();}
 bool Game::frozen() const {return _frozen;}

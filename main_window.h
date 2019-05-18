@@ -10,6 +10,7 @@ class QComboBox;
 class QLabel;
 class Game;
 class GameSwitcher;
+class QStackedWidget;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -28,6 +29,7 @@ public:
 	void whitePlayerType(int type);
 	void blackPlayerType(int type);
 	void registerNewGame();
+	void dropOldGame();
 	void flip();
 	void cut();
 private:
@@ -43,8 +45,7 @@ private:
 	QAction *_cut;
 	QLabel *_count;
 	QAction *_quit;
-private:
-	QList<Game*> _games;
+	QStackedWidget *_central;
 };
 
 #endif

@@ -24,7 +24,7 @@ public:
 public:
 	Game(QObject *parent = nullptr);
 	Game* clone() const;
-	QWidget* centralWidget() const;
+	QWidget* gameWidget() const;
 	void move(QList<Cell> action);
 public:
 	void postCommand(Command command);
@@ -79,7 +79,7 @@ private:
 		QString _description;
 	};
 private:
-	QWidget *_central;
+	QWidget *_widget;
 	BoardWidget *_board;
 	HistoryWidget *_history;
 private:
