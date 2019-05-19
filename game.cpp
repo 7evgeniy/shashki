@@ -39,14 +39,16 @@ Game::Game(QObject *parent) : QObject(parent) {
 
 Game* Game::clone() const {
 	Game *other = new Game(parent());
-	other->_project[0] = _project[0];
-	other->_project[1] = _project[1];
-	other->makePlayers();
-	other->_actions = _actions;
-	other->_states = _states;
-	other->_now = _now;
-	other->_frozen = true;
-	other->notifyGui();
+	other->_board->setFlipped(_board->flipped());
+	if (enabled()) {
+		other->_project[0] = _project[0];
+		other->_project[1] = _project[1];
+		other->makePlayers();
+		other->_actions = _actions;
+		other->_states = _states;
+		other->_now = _now;
+		other->notifyGui();
+	}
 	return other;
 }
 

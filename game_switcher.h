@@ -20,6 +20,8 @@ signals:
 	void gameCreated();
 	void aboutToDrop();
 private:
+	QAction *_add;
+	QAction *_remove;
 	QActionGroup *_group;
 	QList<QAction*> _actions;
 	QList<Game*> _games;
