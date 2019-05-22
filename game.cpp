@@ -47,6 +47,7 @@ Game* Game::clone() const {
 		other->_actions = _actions;
 		other->_states = _states;
 		other->_now = _now;
+		other->_players[_states.last().color()]->activate(_states.last());
 		other->notifyGui();
 	}
 	return other;
