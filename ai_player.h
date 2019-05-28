@@ -10,6 +10,7 @@ class AiPlayer : public Player {
 	Q_OBJECT
 public:
 	AiPlayer(Game *game);
+	void setAbility(double ability);
 	void activate(const BoardState &board);
 	void done();
 private:
@@ -18,20 +19,23 @@ private:
 private:
 	QFutureWatcher<Action> _watcher;
 	QFuture<Action> _future;
+	double _ability;     // Вероятность выбрать ход, если он хороший; из интервала (0; 1)
 private:
+	struct PlayInfo {
+		ActionList actions;
+		std::vector<double> quality;
+		bool isWhite;
+		double ability;
+	};
 	static ActionList explore(const BoardState &board);
 	static ActionList explore(const BoardState& board, Action action);
 	static Action traverse (BoardState board);
 	static double minimax (const BoardState &board, int level, double alpha, double beta);
 	static double evaluate (const BoardState &board);
-	static double randomise (double value);
-	static double random ();
+	static Action randomisePlay(PlayInfo play);
 private:
-	static const double RandMin;
-	static const double RandMax;
 	static const double WhiteWin;
 	static const double BlackWin;
-	static const double MyMove;
 	static const int ManPrice;
 	static const int KingPrice;
 	static const int MaxLevel;

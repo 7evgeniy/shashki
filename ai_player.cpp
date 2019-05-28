@@ -3,9 +3,14 @@
 #include <QtConcurrent>
 #include <random>
 
-AiPlayer::AiPlayer(Game *game) : Player(game) {
+AiPlayer::AiPlayer(Game *game) : Player(game), _ability(0.9) {
 	auto finished = &QFutureWatcher<Action>::finished;
 	connect(&_watcher, finished, this, &AiPlayer::done);
+}
+
+void AiPlayer::setAbility(double ability) {
+	if (ability > 0.0 && ability < 1.0)
+		_ability = ability;
 }
 
 void AiPlayer::activate(const BoardState& board) {
@@ -50,28 +55,25 @@ AiPlayer::ActionList AiPlayer::explore(const BoardState& board, AiPlayer::Action
 }
 
 AiPlayer::Action AiPlayer::traverse (BoardState board) {
-	ActionList every = explore(board);
-	if (every.empty() || !board.color().valid())
+	PlayInfo play;
+	play.actions = explore(board);
+	if (play.actions.empty() || !board.color().valid())
 		return {};
-	if (every.size() == 1)
-		return every.front();
-	unsigned int choice = 0;
+	if (play.actions.size() == 1)
+		return play.actions.front();
 	double alpha = BlackWin, beta = WhiteWin;
-	bool isWhite = (board.color() == Role::White);
-	for (unsigned int i = 0; i < every.size(); ++ i) {
+	play.isWhite = (board.color() == Role::White);
+	for (unsigned int i = 0; i < play.actions.size(); ++ i) {
 		BoardState copy = board;
-		BoardState::apply(copy, every[i]);
+		BoardState::apply(copy, play.actions[i]);
 		double value = minimax(copy, MaxLevel, alpha, beta);
-		if (isWhite && value > alpha) {
+		play.quality.push_back(value);
+		if (play.isWhite && value > alpha)
 			alpha = value;
-			choice = i;
-		}
-		if (!isWhite && value < beta) {
+		if (!play.isWhite && value < beta)
 			beta = value;
-			choice = i;
-		}
 	}
-	return every[choice];
+	return randomisePlay(play);
 }
 
 double AiPlayer::minimax (const BoardState &board, int level, double alpha, double beta) {
@@ -105,26 +107,35 @@ double AiPlayer::evaluate (const BoardState &board) {
 		wc += board.position().king(cell) ? KingPrice : ManPrice;
 	for (Cell cell : black)
 		bc += board.position().king(cell) ? KingPrice : ManPrice;
-	double value = randomise(static_cast<double>(wc)/static_cast<double>(bc));
-	return isWhite ? value*MyMove : value/MyMove;
+	return static_cast<double>(wc)/static_cast<double>(bc);
 }
 
-double AiPlayer::randomise (double value) {
-	return value * (1 + random());
-}
-
-double AiPlayer::random() {
+// 1. Отсортировать ходы по возрастанию качества;
+// 2. Наиболее вероятный ход — в конце массива для белых, в начале массива для чёрных.
+AiPlayer::Action AiPlayer::randomisePlay(PlayInfo play) {
+	for (unsigned int i = 0; i < play.quality.size(); ++i) {
+		unsigned int min = i+1;
+		for (unsigned int j = i+2; j < play.quality.size(); ++ j)
+			if (play.quality[min] > play.quality[j])
+				min = j;
+		if (min < play.quality.size() && play.quality[i] > play.quality[min]) {
+				std::swap(play.quality[i], play.quality[min]);
+				std::swap(play.actions[i], play.actions[min]);
+		}
+	}
 	static std::random_device RD;
 	static std::default_random_engine RE(RD());
-	static std::uniform_real_distribution<double> UD(RandMin, RandMax);
-	return UD(RE);
+	static std::geometric_distribution<unsigned int> UD(play.ability);
+	unsigned int i = UD(RE);
+	if (i >= play.actions.size())
+		i = 0;
+	if (play.isWhite)
+		i = play.actions.size()-i-1;
+	return play.actions[i];
 }
 
-const double AiPlayer::RandMin = -0.02;
-const double AiPlayer::RandMax = 0.02;
 const double AiPlayer::WhiteWin = 50.0;
 const double AiPlayer::BlackWin = 1/50.0;
-const double AiPlayer::MyMove = 1.05;
 const int AiPlayer::ManPrice = 1;
 const int AiPlayer::KingPrice = 3;
 const int AiPlayer::MaxLevel = 7;
