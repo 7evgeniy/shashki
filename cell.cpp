@@ -95,7 +95,7 @@ Cell Cell::neighbour(Direction direction) const {
 }
 
 Direction Cell::connection(Cell other) const {
-	switch (other._value - _value) {
+    switch (static_cast<int>(other._value) - static_cast<int>( _value)) {
 	case +7: return Direction::LeftForward;
 	case +9: return Direction::RightForward;
 	case -9: return Direction::LeftBackward;
