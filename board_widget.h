@@ -40,6 +40,7 @@ private:
 	Cell locate(QPoint pos) const;
 	void drawSquare(QPainter& painter, int row, int col);
 	void drawStone(QPainter& painter, QPoint centre, Cell cell);
+    Cell makeCell(int col, int row) const;
 private:
 	struct Environment {
 		QFont LabelFont;

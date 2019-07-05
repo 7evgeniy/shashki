@@ -81,9 +81,7 @@ void BoardWidget::paintEvent(QPaintEvent *) {
 }
 
 void BoardWidget::drawSquare(QPainter &painter, int row, int col) {
-	int rank = _flipped ? row : 7-row;
-	int file = _flipped ? 7-col : col;
-	Cell cell(file, rank);
+    Cell cell = makeCell(col, row);
 	painter.save();
 	painter.setBrush(((row+col)%2 == 1) ? _env.BlackSquareBrush : _env.WhiteSquareBrush);
 	if (cell == _border && cell.valid())
@@ -138,8 +136,14 @@ Cell BoardWidget::locate(QPoint pos) const {
 	pos /= viewport.height();
 	pos -= QPoint(50, 50);
 	if (pos.x() < 0 || pos.y() < 0)
-		return Cell();
-	return Cell(pos.x()/100, 7-(pos.y()/100));
+        return Cell();
+    return makeCell(pos.x()/100, pos.y()/100);
+}
+
+Cell BoardWidget::makeCell(int col, int row) const {
+    int rank = _flipped ? row : 7-row;
+    int file = _flipped ? 7-col : col;
+    return Cell(file, rank);
 }
 
 BoardWidget::Environment::Environment() {
