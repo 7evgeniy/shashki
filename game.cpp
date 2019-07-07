@@ -69,7 +69,8 @@ void Game::move(QList<Cell> action) {
 		++ _now;
 	_actions.append(action);
 	_states.append(copy);
-	_players[copy.color()]->activate(copy);
+	if (!copy.lost())
+		_players[copy.color()]->activate(copy);
 	if (_writing) {
 		QFile file(_filename);
 		file.open(QIODevice::WriteOnly | QIODevice::Append);
