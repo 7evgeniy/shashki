@@ -3,9 +3,14 @@
 #include <QtConcurrent>
 #include <random>
 
-AiPlayer::AiPlayer(Game *game) : Player(game) {
+AiPlayer::AiPlayer(Game *game) : Player(game), _ability(DefaultAbility) {
 	auto finished = &QFutureWatcher<Action>::finished;
 	connect(&_watcher, finished, this, &AiPlayer::done);
+}
+
+void AiPlayer::setAbility(double ability) {
+	if (ability > 0.0 && ability < 1.0)
+		_ability = ability;
 }
 
 void AiPlayer::activate(const BoardState& board) {
@@ -14,10 +19,25 @@ void AiPlayer::activate(const BoardState& board) {
 }
 
 void AiPlayer::done() {
+	Action result = select(_future.result());
 	QList<Cell> action;
-	for (Cell cell : _future.result())
+	for (Cell cell : result)
 		action.append(cell);
 	_game->move(action);
+}
+
+AiPlayer::Action AiPlayer::select(ActionList actions) {
+	if (actions.size() == 1)
+		return actions.back();
+	static std::random_device RD;
+	static std::default_random_engine RE(RD());
+	static std::uniform_real_distribution<double> UD(0.0, 1.0);
+	double choice = UD(RE);
+	if (choice <= _ability)
+		return actions.back();
+	choice = (choice-_ability)/(1.0-_ability);
+	int index = choice * (actions.size()-1);
+	return actions[index];
 }
 
 AiPlayer::ActionList AiPlayer::explore(const BoardState& board) {
@@ -49,13 +69,15 @@ AiPlayer::ActionList AiPlayer::explore(const BoardState& board, AiPlayer::Action
 	return result;
 }
 
-AiPlayer::Action AiPlayer::traverse (BoardState board) {
-	std::vector<std::vector<Cell>> actions = explore(board);
-	std::vector<Cell> result = actions.front();
+// Процедура возвращает список всех возможных ходов,
+// но выбранный наилучший ход ставит в конец списка.
+AiPlayer::ActionList AiPlayer::traverse (BoardState board) {
+	ActionList actions = explore(board);
+	int index = 0;
 	if (actions.empty() || !board.color().valid())
 		return {};
 	if (actions.size() == 1)
-		return result;
+		return actions;
 	double alpha = BlackOverflow, beta = WhiteOverflow;
 	for (unsigned int i = 0; i < actions.size(); ++ i) {
 		BoardState copy = board;
@@ -64,18 +86,19 @@ AiPlayer::Action AiPlayer::traverse (BoardState board) {
 			double value = black(copy, MaxLevel, alpha, beta);
 			if (value > alpha) {
 				alpha = value;
-				result = actions[i];
+				index = i;
 			}
 		}
 		if (board.color() == Role::Black) {
 			double value = white(copy, MaxLevel, alpha, beta);
 			if (value < beta) {
 				beta = value;
-				result = actions[i];
+				index = i;
 			}
 		}
 	}
-	return result;
+	std::swap(actions[index], actions.back());
+	return actions;
 }
 
 double AiPlayer::white(const BoardState &board, int level, double alpha, double beta) {
@@ -143,6 +166,7 @@ const double AiPlayer::WhiteWin = 50.0;
 const double AiPlayer::BlackWin = 1/50.0;
 const double AiPlayer::WhiteOverflow = AiPlayer::WhiteWin * 2;
 const double AiPlayer::BlackOverflow = AiPlayer::BlackWin / 2;
+const double AiPlayer::DefaultAbility = 0.9;
 const int AiPlayer::ManPrice = 1;
 const int AiPlayer::KingPrice = 3;
 const int AiPlayer::MaxLevel = 7;

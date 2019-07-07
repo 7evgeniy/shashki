@@ -17,20 +17,23 @@ private:
 	typedef std::vector<Cell> Action;
 	typedef std::vector<Action> ActionList;
 private:
-	QFutureWatcher<Action> _watcher;
-	QFuture<Action> _future;
+	QFutureWatcher<ActionList> _watcher;
+	QFuture<ActionList> _future;
+	double _ability;
 private:
 	static ActionList explore(const BoardState &board);
 	static ActionList explore(const BoardState& board, Action action);
-	static Action traverse(BoardState board);
+	static ActionList traverse(BoardState board);
 	static double white(const BoardState &board, int level, double alpha, double beta);
 	static double black(const BoardState &board, int level, double alpha, double beta);
 	static double evaluate(const BoardState &board, double alpha, double beta);
+	Action select(ActionList actions);
 private:
 	static const double WhiteWin;
 	static const double BlackWin;
 	static const double WhiteOverflow;
 	static const double BlackOverflow;
+	static const double DefaultAbility;
 	static const int ManPrice;
 	static const int KingPrice;
 	static const int MaxLevel;
