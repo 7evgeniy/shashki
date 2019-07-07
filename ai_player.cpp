@@ -57,21 +57,20 @@ AiPlayer::Action AiPlayer::traverse (BoardState board) {
 	if (actions.size() == 1)
 		return result;
 	double alpha = BlackOverflow, beta = WhiteOverflow;
-	bool isWhite = (board.color() == Role::White);
 	for (unsigned int i = 0; i < actions.size(); ++ i) {
 		BoardState copy = board;
 		BoardState::apply(copy, actions[i]);
-		if (!isWhite) {
-			double value = white(copy, MaxLevel, alpha, beta);
-			if (value < beta) {
-				beta = value;
-				result = actions[i];
-			}
-		}
-		if (isWhite) {
+		if (board.color() == Role::White) {
 			double value = black(copy, MaxLevel, alpha, beta);
 			if (value > alpha) {
 				alpha = value;
+				result = actions[i];
+			}
+		}
+		if (board.color() == Role::Black) {
+			double value = white(copy, MaxLevel, alpha, beta);
+			if (value < beta) {
+				beta = value;
 				result = actions[i];
 			}
 		}
