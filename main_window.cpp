@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include "game_switcher.h"
 #include <QStackedWidget>
+#include "ai_player.h"
 
 MainWindow::MainWindow() {
 	_central = new QStackedWidget;
@@ -22,6 +23,7 @@ MainWindow::MainWindow() {
 	_drop = new QAction(QIcon(":/drop.png"), "Сброс игры", this);
 	_white = Game::makePlayerList(Role::White);
 	_black = Game::makePlayerList(Role::Black);
+	_ability = new QSlider(Qt::Horizontal);
 	_switcher = new GameSwitcher;
 	_flip = new QAction(QIcon(":/flip.png"), "Перевернуть доску", this);
 	_cut = new QAction(QIcon(":/cut.png"), "Обрезать игру", this);
@@ -29,6 +31,11 @@ MainWindow::MainWindow() {
 	_quit = new QAction(QIcon(":/quit.png"), "Выход", this);
 	_store->setCheckable(true);
 	_toggle->setCheckable(true);
+	_ability->setMinimum(1);
+	_ability->setMaximum(MaxAbility);
+	_ability->setValue(MaxAbility);
+	_ability->setToolTip("Сила машинной игры");
+	_ability->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 	QToolBar *only = addToolBar("Управление");
 	QWidget *stretch = new QWidget;
@@ -40,6 +47,7 @@ MainWindow::MainWindow() {
 	only->addAction(_drop);
 	only->addWidget(_white);
 	only->addWidget(_black);
+	only->addWidget(_ability);
 	only->addWidget(_switcher);
 	only->addAction(_flip);
 	only->addAction(_cut);
@@ -58,6 +66,7 @@ MainWindow::MainWindow() {
 	connect(_drop, &QAction::triggered, this, &MainWindow::drop);
 	connect(_white, cic, this, &MainWindow::whitePlayerType);
 	connect(_black, cic, this, &MainWindow::blackPlayerType);
+	connect(_ability, &QSlider::valueChanged, this, &MainWindow::abilityChanged);
 	connect(_switcher, &GameSwitcher::notifyGui, this, &MainWindow::update);
 	connect(_switcher, &GameSwitcher::gameCreated, this, &MainWindow::registerNewGame);
 	connect(_flip, &QAction::triggered, this, &MainWindow::flip);
@@ -180,3 +189,12 @@ void MainWindow::whitePlayerType(int type) {_switcher->game()->setPlayerType(Rol
 void MainWindow::blackPlayerType(int type) {_switcher->game()->setPlayerType(Role::Black, type);}
 void MainWindow::flip() {_switcher->game()->postCommand(Game::Command::Flip);}
 void MainWindow::cut() {_switcher->game()->postCommand(Game::Command::Cut);}
+
+void MainWindow::abilityChanged(int ability) {
+	if (ability == MaxAbility)
+		AiPlayer::DefaultAbility = 1.0;
+	else {
+		double a = ability, b = MaxAbility;
+		AiPlayer::DefaultAbility = 0.8 + 0.2*a/b;
+	}
+}

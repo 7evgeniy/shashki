@@ -162,11 +162,11 @@ double AiPlayer::evaluate (const BoardState &board, double alpha, double beta) {
 	return result;
 }
 
+double AiPlayer::DefaultAbility = 0.9;    // вероятность совершить правильный ход
 const double AiPlayer::WhiteWin = 50.0;
 const double AiPlayer::BlackWin = 1/50.0;
 const double AiPlayer::WhiteOverflow = AiPlayer::WhiteWin * 2;
 const double AiPlayer::BlackOverflow = AiPlayer::BlackWin / 2;
-const double AiPlayer::DefaultAbility = 0.9;
 const int AiPlayer::ManPrice = 1;
 const int AiPlayer::KingPrice = 3;
 const int AiPlayer::MaxLevel = 7;

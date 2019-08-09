@@ -13,6 +13,8 @@ public:
 	void setAbility(double ability);
 	void activate(const BoardState &board);
 	void done();
+public:
+	static double DefaultAbility;    // сила игры, присваиваемая игроку в конструкторе
 private:
 	typedef std::vector<Cell> Action;
 	typedef std::vector<Action> ActionList;
@@ -33,7 +35,6 @@ private:
 	static const double BlackWin;
 	static const double WhiteOverflow;
 	static const double BlackOverflow;
-	static const double DefaultAbility;
 	static const int ManPrice;
 	static const int KingPrice;
 	static const int MaxLevel;

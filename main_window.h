@@ -7,6 +7,7 @@
 
 class QAction;
 class QComboBox;
+class QSlider;
 class QLabel;
 class Game;
 class GameSwitcher;
@@ -28,6 +29,7 @@ public:
 	void drop();
 	void whitePlayerType(int type);
 	void blackPlayerType(int type);
+	void abilityChanged(int ability);
 	void registerNewGame();
 	void dropOldGame();
 	void flip();
@@ -40,12 +42,15 @@ private:
 	QAction *_drop;
 	QComboBox *_white;
 	QComboBox *_black;
+	QSlider *_ability;
 	GameSwitcher *_switcher;
 	QAction *_flip;
 	QAction *_cut;
 	QLabel *_count;
 	QAction *_quit;
 	QStackedWidget *_central;
+private:
+	static const int MaxAbility = 20;
 };
 
 #endif
