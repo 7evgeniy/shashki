@@ -98,7 +98,7 @@ void Game::stopWriting() {_writing = false; notifyGui();}
 QWidget* Game::gameWidget() const {return _widget;}
 bool Game::lost() const {return !enabled() || _states.last().lost();}
 bool Game::enabled() const {return !_states.isEmpty();}
-bool Game::frozen() const {return _frozen;}
+bool Game::frozen() const {return _frozen || _states.last().lost();}
 QString Game::filename() const {return _filename;}
 bool Game::isWriting() const {return _writing;}
 
@@ -168,7 +168,8 @@ void Game::doRead() {
 		doDrop();
 		throw Exception(WrongFormatError);
 	}
-	_players[_states.last().color()]->activate(_states.last());
+	if (!_states.last().lost())
+		_players[_states.last().color()]->activate(_states.last());
 	_now = _states.count()-1;
 	_writing = true;
 }
@@ -257,7 +258,7 @@ void Game::setupBoard() {
 		_board->setPosition(initialPosition());
 	}
 	else {
-		bool active = enabled() && !frozen() && _now == _states.count()-1 && !lost();
+		bool active = !frozen() && _now == _states.count()-1;
 		_board->setEnabled(active);
 		_board->setPosition(_states[_now].position());
 	}

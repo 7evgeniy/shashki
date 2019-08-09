@@ -33,7 +33,7 @@ public:
 	void setFrozen(bool is);
 	void stopWriting();
 	bool lost() const;
-	bool frozen() const;
+	bool frozen() const;    // вызов разрешён, только если enabled() == true
 	bool enabled() const;
 	QString filename() const;
 	bool isWriting() const;
