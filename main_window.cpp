@@ -31,11 +31,6 @@ MainWindow::MainWindow() {
 	_quit = new QAction(QIcon(":/quit.png"), "Выход", this);
 	_store->setCheckable(true);
 	_toggle->setCheckable(true);
-	_ability->setMinimum(1);
-	_ability->setMaximum(MaxAbility);
-	_ability->setValue(MaxAbility);
-	_ability->setToolTip("Сила машинной игры");
-	_ability->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 	QToolBar *only = addToolBar("Управление");
 	QWidget *stretch = new QWidget;
@@ -74,6 +69,11 @@ MainWindow::MainWindow() {
 	connect(_quit, &QAction::triggered, qApp, &QApplication::quit);
 	connect(qApp, &QApplication::aboutToQuit, this, &MainWindow::saveSettings);
 
+	_ability->setMinimum(1);
+	_ability->setMaximum(MaxAbility);
+	_ability->setValue(MaxAbility);
+	_ability->setToolTip("Сила машинной игры");
+	_ability->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	whitePlayerType(_white->currentData().toInt());
 	blackPlayerType(_black->currentData().toInt());
 	QApplication::setOrganizationName("Evgeniy");
