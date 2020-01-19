@@ -7,6 +7,7 @@
 #include "gui_player.h"
 #include <QDataStream>
 #include <QFile>
+#include <cassert>
 
 const uint8_t Game::FileHeader[4] = {0x53, 0x48, 0x00, 0x00};
 
@@ -41,9 +42,6 @@ Game* Game::clone() const {
 	Game *other = new Game(parent());
 	other->_board->setFlipped(_board->flipped());
 	if (enabled()) {
-		other->_project[0] = _project[0];
-		other->_project[1] = _project[1];
-		other->makePlayers();
 		other->_actions = _actions;
 		other->_states = _states;
 		other->_now = _now;
@@ -92,9 +90,10 @@ void Game::setFrozen(bool is) {
 	notifyGui();
 }
 
-void Game::setPlayerType(Role color, PlayerType type) {_project[color] = type;}
 void Game::setFilename(QString filename) {_filename = filename;}
 void Game::stopWriting() {_writing = false; notifyGui();}
+void Game::setFlipped(bool is) {_board->setFlipped(is);}
+bool Game::flipped() const {return _board->flipped();}
 QWidget* Game::gameWidget() const {return _widget;}
 bool Game::lost() const {return !enabled() || _states.last().lost();}
 bool Game::enabled() const {return !_states.isEmpty();}
@@ -116,7 +115,6 @@ void Game::postCommand(Command command) {
 		case Command::Write: doWrite(); break;
 		case Command::Drop: doDrop(); break;
 		case Command::Cut: doCut(); break;
-		case Command::Flip: doFlip(); break;
 		default: return;
 		}
 	} catch (Exception& e) {
@@ -131,10 +129,9 @@ void Game::postCommand(Command command) {
 }
 
 void Game::doMake() {
+	assert(_players[Role::White] && _players[Role::Black]);
 	_frozen = false;
 	_buffer.clear();
-	makePlayers();
-	_board->setFlipped(_project[Role::Black] < _project[Role::White]);
 	_buffer.clear();
 	_actions.clear();
 	_states = {initialBoard()};
@@ -341,16 +338,26 @@ QComboBox* Game::makePlayerList(Role color) {
 	return combo;
 }
 
-void Game::makePlayers() {
+void Game::setPlayer(Role color, PlayerType type) {
+	if (!frozen())
+		return;
+	Player *player = nullptr;
+	switch (type) {
+	case Human:
+		player = new GuiPlayer(this, _board); break;
+	case Machine:
+		player = new AiPlayer(this); break;
+	}
+	delete _players[color];
+	_players[color] = player;
+}
+
+void Game::setAiAbility(double ability) {
+	if (!frozen())
+		return;
 	for (int i = 0; i < 2; ++ i) {
-		Player *player = nullptr;
-		switch (_project[i]) {
-		case Human:
-			player = new GuiPlayer(this, _board); break;
-		case Machine:
-			player = new AiPlayer(this); break;
-		}
-		delete _players[i];
-		_players[i] = player;
+		AiPlayer *ai = qobject_cast<AiPlayer*>(_players[i]);
+		if (ai)
+			ai->setAbility(ability);
 	}
 }

@@ -13,15 +13,13 @@ public:
 	void setAbility(double ability);
 	void activate(const BoardState &board);
 	void done();
-public:
-	static double DefaultAbility;    // сила игры, присваиваемая игроку в конструкторе
 private:
 	typedef std::vector<Cell> Action;
 	typedef std::vector<Action> ActionList;
 private:
 	QFutureWatcher<ActionList> _watcher;
 	QFuture<ActionList> _future;
-	double _ability;
+	double _ability;        // вероятность совершить правильный ход
 private:
 	static ActionList explore(const BoardState &board);
 	static ActionList explore(const BoardState& board, Action action);

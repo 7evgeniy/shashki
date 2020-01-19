@@ -18,28 +18,31 @@ class Game : public QObject {
 public:
 	typedef int PlayerType;
 	static const PlayerType None = -1, Human = 0, Machine = 1;
-	enum class Command {Make, Read, Write, Drop, Cut, Flip};
+	enum class Command {Make, Read, Write, Drop, Cut};
 	enum class Travel {Back, Forth, Start, Finish};
 	static QComboBox* makePlayerList(Role color);
-public:
+public:      // существование, представление и действие:
 	Game(QObject *parent = nullptr);
 	Game* clone() const;
 	QWidget* gameWidget() const;
 	void move(QList<Cell> action);
-public:
+public:      // взаимодействие с главным окном:
 	void postCommand(Command command);
-	void setPlayerType(Role color, PlayerType type);
+	void setPlayer(Role color, PlayerType type);
+	void setAiAbility(double ability);
 	void setFilename(QString filename);
 	void setFrozen(bool is);
 	void stopWriting();
 	bool lost() const;
-	bool frozen() const;    // вызов разрешён, только если enabled() == true
+	bool frozen() const;    // вызов осмыслен, только если enabled() == true
 	bool enabled() const;
 	QString filename() const;
 	bool isWriting() const;
 	int stoneCount(Role color) const;
+	bool flipped() const;
+	void setFlipped(bool is);
 	void setupBoard();
-public:
+public:      // взаимодействие с виджетом истории:
 	void travelHistory(Travel travel);
 	bool reportHistory(Travel travel) const;
 	Role nowColor() const;
@@ -54,8 +57,6 @@ private:
 	void doDrop();
 	void doCut();
 	void doFlip();
-private:
-	void makePlayers();
 private:
 	static const uint8_t FileHeader[4];
 	static BoardState initialBoard();
@@ -83,7 +84,6 @@ private:
 	BoardWidget *_board;
 	HistoryWidget *_history;
 private:
-	PlayerType _project[2];
 	QString _filename;
 	bool _writing;              // «сделанные полуходы немедля записываются в файл _filename»
 private:

@@ -3,7 +3,7 @@
 #include <QtConcurrent>
 #include <random>
 
-AiPlayer::AiPlayer(Game *game) : Player(game), _ability(DefaultAbility) {
+AiPlayer::AiPlayer(Game *game) : Player(game), _ability(0.9) {
 	auto finished = &QFutureWatcher<Action>::finished;
 	connect(&_watcher, finished, this, &AiPlayer::done);
 }
@@ -162,7 +162,6 @@ double AiPlayer::evaluate (const BoardState &board, double alpha, double beta) {
 	return result;
 }
 
-double AiPlayer::DefaultAbility = 0.9;    // вероятность совершить правильный ход
 const double AiPlayer::WhiteWin = 50.0;
 const double AiPlayer::BlackWin = 1/50.0;
 const double AiPlayer::WhiteOverflow = AiPlayer::WhiteWin * 2;

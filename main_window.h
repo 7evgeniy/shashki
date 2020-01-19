@@ -27,9 +27,6 @@ public:
 	void store(bool on);
 	void toggle(bool on);
 	void drop();
-	void whitePlayerType(int type);
-	void blackPlayerType(int type);
-	void abilityChanged(int ability);
 	void registerNewGame();
 	void dropOldGame();
 	void flip();
@@ -49,6 +46,8 @@ private:
 	QLabel *_count;
 	QAction *_quit;
 	QStackedWidget *_central;
+private:
+	void setupGame();
 private:
 	static const int MaxAbility = 20;
 };

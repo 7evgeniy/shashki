@@ -52,16 +52,11 @@ MainWindow::MainWindow() {
 	only->addAction(_quit);
 	only->setObjectName("ToolBarControl");
 
-	typedef void (QComboBox::*PtrToCB_Int)(int);
-	PtrToCB_Int cic = &QComboBox::currentIndexChanged;
 	connect(_make, &QAction::triggered, this, &MainWindow::make);
 	connect(_load, &QAction::triggered, this, &MainWindow::load);
 	connect(_store, &QAction::triggered, this, &MainWindow::store);
 	connect(_toggle, &QAction::triggered, this, &MainWindow::toggle);
 	connect(_drop, &QAction::triggered, this, &MainWindow::drop);
-	connect(_white, cic, this, &MainWindow::whitePlayerType);
-	connect(_black, cic, this, &MainWindow::blackPlayerType);
-	connect(_ability, &QSlider::valueChanged, this, &MainWindow::abilityChanged);
 	connect(_switcher, &GameSwitcher::notifyGui, this, &MainWindow::update);
 	connect(_switcher, &GameSwitcher::gameCreated, this, &MainWindow::registerNewGame);
 	connect(_flip, &QAction::triggered, this, &MainWindow::flip);
@@ -74,12 +69,10 @@ MainWindow::MainWindow() {
 	_ability->setValue(MaxAbility);
 	_ability->setToolTip("Сила машинной игры");
 	_ability->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-	whitePlayerType(_white->currentData().toInt());
-	blackPlayerType(_black->currentData().toInt());
 	QApplication::setOrganizationName("Evgeniy");
 	QApplication::setApplicationName("Shashki");
 	qApp->setWindowIcon(QIcon(":/app.png"));
-	setWindowTitle("Шашки");
+	qApp->setApplicationDisplayName("Шашки");
 	QDir::setCurrent(QDir::homePath());
 	restoreSettings();
 	registerNewGame();
@@ -89,7 +82,9 @@ MainWindow::MainWindow() {
 void MainWindow::registerNewGame() {
 	connect(_switcher->game(), &Game::notifyGui, this, &MainWindow::update);
 	connect(_switcher->game(), &Game::notifyError, this, &MainWindow::tellError);
+	setupGame();          // настройка, нужная и в начале партии, и при её продолжении
 	_central->addWidget(_switcher->game()->gameWidget());
+	_switcher->game()->setFlipped(_black->currentData().toInt() > _white->currentData().toInt());
 }
 
 void MainWindow::dropOldGame() {
@@ -112,6 +107,9 @@ void MainWindow::update() {
 	_drop->setEnabled(_switcher->game()->enabled());
 	_cut->setEnabled(_switcher->game()->enabled());
 	_toggle->setChecked(_switcher->game()->enabled() && !_switcher->game()->frozen());
+	_white->setEnabled(_switcher->game()->enabled() && _switcher->game()->frozen());
+	_black->setEnabled(_switcher->game()->enabled() && _switcher->game()->frozen());
+	_ability->setEnabled(_switcher->game()->enabled() && _switcher->game()->frozen());
 	if (_switcher->game()->isWriting()) {
 		_store->setToolTip(QString("Запись в файл: %1").arg(_switcher->game()->filename()));
 		_store->setChecked(true);
@@ -182,19 +180,19 @@ void MainWindow::store(bool on) {
 		_switcher->game()->stopWriting();
 }
 
-void MainWindow::make() {_switcher->game()->postCommand(Game::Command::Make);}
-void MainWindow::toggle(bool on) {_switcher->game()->setFrozen(!on);}
+void MainWindow::make() {setupGame(); _switcher->game()->postCommand(Game::Command::Make);}
+void MainWindow::toggle(bool on) {if (on) setupGame(); _switcher->game()->setFrozen(!on);}
 void MainWindow::drop() {_switcher->game()->postCommand(Game::Command::Drop);}
-void MainWindow::whitePlayerType(int type) {_switcher->game()->setPlayerType(Role::White, type);}
-void MainWindow::blackPlayerType(int type) {_switcher->game()->setPlayerType(Role::Black, type);}
-void MainWindow::flip() {_switcher->game()->postCommand(Game::Command::Flip);}
+void MainWindow::flip() {_switcher->game()->setFlipped(!_switcher->game()->flipped());}
 void MainWindow::cut() {_switcher->game()->postCommand(Game::Command::Cut);}
 
-void MainWindow::abilityChanged(int ability) {
-	if (ability == MaxAbility)
-		AiPlayer::DefaultAbility = 1.0;
+void MainWindow::setupGame() {
+	_switcher->game()->setPlayer(Role::White, _white->currentData().toInt());
+	_switcher->game()->setPlayer(Role::Black, _black->currentData().toInt());
+	if (_ability->value() == MaxAbility)
+		_switcher->game()->setAiAbility(1.0);
 	else {
-		double a = ability, b = MaxAbility;
-		AiPlayer::DefaultAbility = 0.8 + 0.2*a/b;
+		double a = _ability->value(), b = MaxAbility;
+		_switcher->game()->setAiAbility(0.8 + 0.2*a/b);
 	}
 }
