@@ -339,7 +339,7 @@ QComboBox* Game::makePlayerList(Role color) {
 }
 
 void Game::setPlayer(Role color, PlayerType type) {
-	if (!frozen())
+	if (enabled() && !frozen())
 		return;
 	Player *player = nullptr;
 	switch (type) {
@@ -350,10 +350,12 @@ void Game::setPlayer(Role color, PlayerType type) {
 	}
 	delete _players[color];
 	_players[color] = player;
+	if (enabled())
+		player->activate(_states.last());
 }
 
 void Game::setAiAbility(double ability) {
-	if (!frozen())
+	if (enabled() && !frozen())
 		return;
 	for (int i = 0; i < 2; ++ i) {
 		AiPlayer *ai = qobject_cast<AiPlayer*>(_players[i]);

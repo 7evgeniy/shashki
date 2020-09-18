@@ -26,7 +26,7 @@ private:
 	static ActionList traverse(BoardState board);
 	static double white(const BoardState &board, int level, double alpha, double beta);
 	static double black(const BoardState &board, int level, double alpha, double beta);
-	static double evaluate(const BoardState &board, double alpha, double beta);
+	static double evaluate(const BoardState &board);
 	Action select(ActionList actions);
 private:
 	static const double WhiteWin;
