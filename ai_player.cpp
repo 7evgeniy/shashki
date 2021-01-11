@@ -19,25 +19,11 @@ void AiPlayer::activate(const BoardState& board) {
 }
 
 void AiPlayer::done() {
-	Action result = select(_future.result());
+	Action result = _future.result();
 	QList<Cell> action;
 	for (Cell cell : result)
 		action.append(cell);
 	_game->move(action);
-}
-
-AiPlayer::Action AiPlayer::select(ActionList actions) {
-	if (actions.size() == 1)
-		return actions.back();
-	static std::random_device RD;
-	static std::default_random_engine RE(RD());
-	static std::uniform_real_distribution<double> UD(0.0, 1.0);
-	double choice = UD(RE);
-	if (choice <= _ability)
-		return actions.back();
-	choice = (choice-_ability)/(1.0-_ability);
-	int index = choice * (actions.size()-1);
-	return actions[index];
 }
 
 AiPlayer::ActionList AiPlayer::explore(const BoardState& board) {
@@ -69,80 +55,72 @@ AiPlayer::ActionList AiPlayer::explore(const BoardState& board, AiPlayer::Action
 	return result;
 }
 
-// Процедура возвращает список всех возможных ходов,
-// но ставит ход с наилучшей гарантией в конец списка.
-AiPlayer::ActionList AiPlayer::traverse (BoardState board) {
+AiPlayer::Action AiPlayer::traverse(BoardState board) {
 	ActionList actions = explore(board);
 	int index = 0;
 	if (actions.empty() || !board.color().valid())
 		return {};
 	if (actions.size() == 1)
-		return actions;
-	double alpha = BlackOverflow, beta = WhiteOverflow;
+		return actions[0];
+	double alpha = BlackWin/2, beta = WhiteWin*2;
 	for (unsigned int i = 0; i < actions.size(); ++ i) {
 		BoardState copy = board;
 		BoardState::apply(copy, actions[i]);
 		if (board.color() == Role::White) {
 			double value = black(copy, MaxLevel, alpha, beta);
-			if (value != 0.0 && value > alpha) {
+			if (value >= alpha) {
 				alpha = value;
 				index = i;
 			}
 		}
 		if (board.color() == Role::Black) {
 			double value = white(copy, MaxLevel, alpha, beta);
-			if (value != 0.0 && value < beta) {
+			if (value <= beta) {
 				beta = value;
 				index = i;
 			}
 		}
 	}
-	std::swap(actions[index], actions.back());
-	return actions;
+	return actions[index];
 }
 
-// найти, какую гарантию позиция даёт белым, если ход принадлежит белым.
+// вычисление гарантии качества оконечной позиции.
+// если гарантия попадает в интервал (α, β), то вернуть её полностью вычисленное значение.
+// иначе вернуть несовершенное значение гарантии.
+// аргументы α, β задают подсказку, в каком случае сокращать вычисления.
 double AiPlayer::white(const BoardState &board, int level, double alpha, double beta) {
-	if (level <= 0 && board.quiet())
+	if (level-- <= 0 && board.quiet())
 		return evaluate(board);
 	ActionList every = explore(board);
-	if (every.empty())
-		return BlackWin;
-	double result = 0.0;
+	double result = BlackWin;
 	for (auto action : every) {
 		BoardState copy = board;
 		BoardState::apply(copy, action);
-		double value = black(copy, level-1, alpha, beta);
-		if (value == 0.0)    // если гарантия не вычислена, игнорировать
-			continue;
-		if (value > beta)    // если гарантия заведомо лучше уже полученной, не вычислять
-			return 0.0;
+		double value = black(copy, level, alpha, beta);
+		if (value >= beta)
+			return value;
 		if (value > alpha)
-			alpha = value;     // граница на наилучшую гарантию для чёрных
-		if (result == 0.0 || value > result)
+			alpha = value;
+		if (value > result)
 			result = value;
 	}
 	return result;
 }
 
 double AiPlayer::black(const BoardState &board, int level, double alpha, double beta) {
-	if (level <= 0 && board.quiet())
+	if (level-- <= 0 && board.quiet())
 		return evaluate(board);
 	ActionList every = explore(board);
-	if (every.empty())
-		return WhiteWin;
-	double result = 0.0;
+	double result = WhiteWin;
 	for (auto action : every) {
 		BoardState copy = board;
 		BoardState::apply(copy, action);
-		double value = white(copy, level-1, alpha, beta);
-		if (value == 0.0)
-			continue;
-		if (value < alpha)
-			return 0.0;
+		double value = white(copy, level, alpha, beta);
+		if (value <= alpha)
+			return value;
 		if (value < beta)
 			beta = value;
-		if (result == 0.0 || value < result)
+		if (value < result)
 			result = value;
 	}
 	return result;
@@ -164,8 +142,6 @@ double AiPlayer::evaluate (const BoardState &board) {
 
 const double AiPlayer::WhiteWin = 50.0;
 const double AiPlayer::BlackWin = 1/50.0;
-const double AiPlayer::WhiteOverflow = AiPlayer::WhiteWin * 2.0;
-const double AiPlayer::BlackOverflow = AiPlayer::BlackWin / 2.0;
 const int AiPlayer::ManPrice = 1;
 const int AiPlayer::KingPrice = 3;
 const int AiPlayer::MaxLevel = 7;
