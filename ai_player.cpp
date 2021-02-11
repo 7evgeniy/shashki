@@ -3,14 +3,9 @@
 #include <QtConcurrent>
 #include <random>
 
-AiPlayer::AiPlayer(Game *game) : Player(game), _ability(0.9) {
+AiPlayer::AiPlayer(double ability) : _ability(ability) {
 	auto finished = &QFutureWatcher<Action>::finished;
 	connect(&_watcher, finished, this, &AiPlayer::done);
-}
-
-void AiPlayer::setAbility(double ability) {
-	if (ability > 0.0 && ability < 1.0)
-		_ability = ability;
 }
 
 void AiPlayer::activate(const BoardState& board) {

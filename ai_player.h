@@ -9,8 +9,7 @@
 class AiPlayer : public Player {
 	Q_OBJECT
 public:
-	AiPlayer(Game *game);
-	void setAbility(double ability);
+	AiPlayer(double ability);
 	void activate(const BoardState &board);
 	void done();
 private:

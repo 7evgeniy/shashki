@@ -2,8 +2,7 @@
 #include "board_widget.h"
 #include "game.h"
 
-GuiPlayer::GuiPlayer(Game *game, BoardWidget *widget) :
-	Player(game), _widget(widget), _navigator(&_tree) {     // is not yet fully constructed!
+GuiPlayer::GuiPlayer(BoardWidget *widget) : _widget(widget), _navigator(&_tree) {
 	connect(_widget, &BoardWidget::click, this, &GuiPlayer::click);
 	connect(_widget, &BoardWidget::move, this, &GuiPlayer::move);
 	connect(_widget, &BoardWidget::reset, this, &GuiPlayer::reset);

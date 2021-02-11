@@ -69,15 +69,6 @@ void Game::move(QList<Cell> action) {
 	_states.append(copy);
 	if (!copy.lost())
 		_players[copy.color()]->activate(copy);
-	if (_writing) {
-		QFile file(_filename);
-		file.open(QIODevice::WriteOnly | QIODevice::Append);
-		QDataStream out(&file);
-		if (!file.isOpen() || !writeAction(out, action)) {
-			_writing = false;
-			notifyError(AtStoreError, CouldntWriteError);
-		}
-	}
 	notifyGui();
 }
 
@@ -91,15 +82,12 @@ void Game::setFrozen(bool is) {
 }
 
 void Game::setFilename(QString filename) {_filename = filename;}
-void Game::stopWriting() {_writing = false; notifyGui();}
 void Game::setFlipped(bool is) {_board->setFlipped(is);}
 bool Game::flipped() const {return _board->flipped();}
 QWidget* Game::gameWidget() const {return _widget;}
 bool Game::lost() const {return !enabled() || _states.last().lost();}
 bool Game::enabled() const {return !_states.isEmpty();}
 bool Game::frozen() const {return _frozen || _states.last().lost();}
-QString Game::filename() const {return _filename;}
-bool Game::isWriting() const {return _writing;}
 
 int Game::stoneCount(Role color) const {
 	if (!enabled())
@@ -168,7 +156,6 @@ void Game::doRead() {
 	if (!_states.last().lost())
 		_players[_states.last().color()]->activate(_states.last());
 	_now = _states.count()-1;
-	_writing = true;
 }
 
 void Game::doWrite() {
@@ -184,7 +171,6 @@ void Game::doWrite() {
 	for (auto action : _actions)
 		if (!writeAction(out, action))
 			throw Exception(CouldntWriteError);
-	_writing = true;
 }
 
 void Game::doDrop() {
@@ -208,8 +194,6 @@ void Game::doCut() {
 	_players[_states.last().color()]->activate(_states.last());
 	_buffer.clear();
 	_frozen = false;
-	if (_writing)
-		doWrite();
 }
 
 void Game::doFlip() {
@@ -338,28 +322,11 @@ QComboBox* Game::makePlayerList(Role color) {
 	return combo;
 }
 
-void Game::setPlayer(Role color, PlayerType type) {
+void Game::setPlayer(Player *player, Role color) {
 	if (enabled() && !frozen())
 		return;
-	Player *player = nullptr;
-	switch (type) {
-	case Human:
-		player = new GuiPlayer(this, _board); break;
-	case Machine:
-		player = new AiPlayer(this); break;
-	}
 	delete _players[color];
 	_players[color] = player;
 	if (enabled())
 		player->activate(_states.last());
-}
-
-void Game::setAiAbility(double ability) {
-	if (enabled() && !frozen())
-		return;
-	for (int i = 0; i < 2; ++ i) {
-		AiPlayer *ai = qobject_cast<AiPlayer*>(_players[i]);
-		if (ai)
-			ai->setAbility(ability);
-	}
 }

@@ -10,7 +10,8 @@ class BoardWidget;
 class GuiPlayer : public Player {
 	Q_OBJECT
 public:
-	GuiPlayer(Game *game, BoardWidget *widget);
+	GuiPlayer();
+	void setWidget(BoardWidget *widget);
 	void activate(const BoardState &board);
 	void deactivate();
 public:

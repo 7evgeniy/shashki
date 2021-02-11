@@ -28,16 +28,12 @@ public:      // существование, представление и дей
 	void move(QList<Cell> action);
 public:      // взаимодействие с главным окном:
 	void postCommand(Command command);
-	void setPlayer(Role color, PlayerType type);
-	void setAiAbility(double ability);
-	void setFilename(QString filename);
+	void setPlayer(Player *player, Role color);
 	void setFrozen(bool is);
-	void stopWriting();
+	void setFilename(QString filename);
 	bool lost() const;
 	bool frozen() const;    // вызов осмыслен, только если enabled() == true
 	bool enabled() const;
-	QString filename() const;
-	bool isWriting() const;
 	int stoneCount(Role color) const;
 	bool flipped() const;
 	void setFlipped(bool is);
@@ -79,13 +75,11 @@ private:
 	private:
 		QString _description;
 	};
+	QString _filename;
 private:
 	QWidget *_widget;
 	BoardWidget *_board;
 	HistoryWidget *_history;
-private:
-	QString _filename;
-	bool _writing;              // «сделанные полуходы немедля записываются в файл _filename»
 private:
 	Player *_players[2];
 	QList<BoardState> _states;    // положение на доске, начиная с исходной позиции.
