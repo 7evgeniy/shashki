@@ -42,11 +42,19 @@ void printBoard(BoardState board) {
 	std::cout << "        A   B   C   D   E   F   G   H  \n\n";
 }
 
-Direction parseDirection(std::string word) {
-	if (word == "left") return Direction::LeftForward;
-	if (word == "right") return Direction::RightForward;
-	if (word == "left-back") return Direction::LeftBackward;
-	if (word == "right-back") return Direction::RightBackward;
+Direction parseDirection(std::string word, Role color) {
+	if (color == Role::White) {
+		if (word == "left") return Direction::LeftForward;
+		if (word == "right") return Direction::RightForward;
+		if (word == "left-back") return Direction::LeftBackward;
+		if (word == "right-back") return Direction::RightBackward;
+	}
+	if (color == Role::Black) {
+		if (word == "left") return Direction::LeftBackward;
+		if (word == "right") return Direction::RightBackward;
+		if (word == "left-back") return Direction::LeftForward;
+		if (word == "right-back") return Direction::RightForward;
+	}
 	return Direction::None;
 }
 
