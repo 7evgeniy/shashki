@@ -79,7 +79,7 @@ BoardState hungryMotion(BoardState initial, std::istringstream &in, int bufsize)
 	while (true) {
 		std::string w;
 		in >> w;
-		Direction d = parseDirection(w);
+		Direction d = parseDirection(w, initial.color());
 		if (!initial.control(initial.place().neighbour(d)))
 			throw MotionException("wrong direction (in hungry)");
 		while (!initial.capture())
@@ -112,7 +112,7 @@ BoardState hungryMotion(BoardState initial, std::istringstream &in, int bufsize)
 BoardState quietMotion(BoardState initial, std::istringstream &in) {
 	std::string w;
 	in >> w;
-	Direction d = parseDirection(w);
+	Direction d = parseDirection(w, initial.color());
 	if (!initial.control(initial.place().neighbour(d)))
 		throw MotionException("wrong direction (in quiet)");
 	if (initial.position().king(initial.place())) {
