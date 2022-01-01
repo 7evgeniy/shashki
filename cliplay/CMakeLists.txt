@@ -1,0 +1,2 @@
+add_executable(clishashki)
+target_link_libraries(clishashki board)
