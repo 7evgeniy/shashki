@@ -200,9 +200,10 @@ int main() {
 	printBoard(board);
 	while (!board.lost()) {
 		board = playHuman(board);
+		if (board.color() == Role::None)
+			return 0;
 		printBoard(board);
 	}
-	if (board.color() != Role::None)
-		std::cout << "The " << (board.color() == Role::Black ? "White" : "Black") << " has won.\n";
+	std::cout << "The " << (board.color() == Role::Black ? "White" : "Black") << " has won.\n";
 	return 0;
 }
