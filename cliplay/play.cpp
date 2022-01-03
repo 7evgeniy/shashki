@@ -1,4 +1,5 @@
 #include "../board/board_state.h"
+#include "../board/minimax.h"
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -80,12 +81,13 @@ BoardState hungryMotion(BoardState initial, std::istringstream &in, int bufsize)
 		std::string w;
 		in >> w;
 		Direction d = parseDirection(w, initial.color());
+		bool king = initial.position().king(initial.place());
 		if (!initial.control(initial.place().neighbour(d)))
 			throw MotionException("wrong direction (in hungry)");
 		while (!initial.capture())
 			initial.control(initial.place().neighbour(d));
 		int count = 1;
-		if (initial.position().king(initial.place())) {
+		if (king) {
 			in >> w;
 			count = parseInteger(w);
 			if (count <= 0)
@@ -113,14 +115,15 @@ BoardState quietMotion(BoardState initial, std::istringstream &in) {
 	std::string w;
 	in >> w;
 	Direction d = parseDirection(w, initial.color());
+	bool king = initial.position().king(initial.place());
 	if (!initial.control(initial.place().neighbour(d)))
 		throw MotionException("wrong direction (in quiet)");
-	if (initial.position().king(initial.place())) {
+	if (king) {
 		in >> w;
 		int count = parseInteger(w);
 		if (count <= 0)
 			throw MotionException("no motion count (in quiet)");
-		while (count --) {
+		while (-- count) {
 			if (!initial.control(initial.place().neighbour(d)))
 				throw MotionException("the motion count is too high (in quiet)");
 		}
@@ -162,6 +165,13 @@ BoardState playHuman(BoardState initial) {
 	return board;
 }
 
+BoardState playAutomatic(BoardState initial) {
+	std::clog << "Waiting till the move is computed... ";
+	BoardState::apply(initial, minimax(initial));
+	std::cout << "The computer has moved.\n";
+	return initial;
+}
+
 BoardState initialBoard() {
 	Position::Stone cells[32];
 	Position::Stone white(Role::White);
@@ -177,7 +187,9 @@ BoardState initialBoard() {
 	return BoardState(Position(cells), Role::White);
 }
 
-int main() {
+typedef BoardState (*PlayerFunction)(BoardState);
+
+void setPlayers(PlayerFunction players[2]) {
 	Role human;
 	std::cout << "This is a shashki playing session.\n";
 	do {
@@ -191,6 +203,13 @@ int main() {
 		if (w == "white")
 			human = Role::White;
 	} while (human == Role::None);
+	players[human] = playHuman;
+	players[human.opposite()] = playAutomatic;
+}
+
+int main() {
+	PlayerFunction players[2];
+	setPlayers(players);
 	std::cout << "The format of a move: <CELL> (<DIRECTION> <COUNT>)+\n";
 	std::cout << "<CELL> is the name of the cell with the stone to move.\n";
 	std::cout << "<DIRECTION> is 'left', 'right', 'left-back' or 'right-back'\n";
@@ -199,7 +218,7 @@ int main() {
 	BoardState board = initialBoard();
 	printBoard(board);
 	while (!board.lost()) {
-		board = playHuman(board);
+		board = players[board.color()](board);
 		if (board.color() == Role::None)
 			return 0;
 		printBoard(board);

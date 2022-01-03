@@ -59,7 +59,7 @@ double white(const BoardState& board, int level, double alpha, double beta) {
 	if (every.empty())
 		return BlackWin;
 	double result = BlackWin / 2.0;
-	for (const auto& action : every) {
+	for (auto action : every) {
 		BoardState copy = board;
 		BoardState::apply(copy, action);
 		double value = black(copy, level-1, alpha, beta);
@@ -80,7 +80,7 @@ double black(const BoardState& board, int level, double alpha, double beta) {
 	if (every.empty())
 		return WhiteWin;
 	double result = WhiteWin * 2.0;
-	for (const auto& action : every) {
+	for (auto action : every) {
 		BoardState copy = board;
 		BoardState::apply(copy, action);
 		double value = white(copy, level-1, alpha, beta);
