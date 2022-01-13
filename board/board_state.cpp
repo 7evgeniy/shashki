@@ -8,6 +8,21 @@ bool BoardState::apply(BoardState &board, std::vector<Cell> action) {
 	return true;
 }
 
+BoardState BoardState::initialBoard() {
+	Position::Stone cells[32];
+	Position::Stone white(Role::White);
+	Position::Stone black(Role::Black);
+	Position::Stone empty(Role::None);
+	int i = 0;
+	while (i < 12)
+			cells[i++] = white;
+	while (i < 20)
+			cells[i++] = empty;
+	while (i < 32)
+			cells[i++] = black;
+	return BoardState(Position(cells), Role::White);
+}
+
 BoardState::BoardState () : _color(Role::None) {}
 BoardState::BoardState (const Position &position, Role start)
 	: _position(position), _color(start) {forage();}

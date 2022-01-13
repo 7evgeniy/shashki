@@ -172,21 +172,6 @@ BoardState playAutomatic(BoardState initial) {
 	return initial;
 }
 
-BoardState initialBoard() {
-	Position::Stone cells[32];
-	Position::Stone white(Role::White);
-	Position::Stone black(Role::Black);
-	Position::Stone empty(Role::None);
-	int i = 0;
-	while (i < 12)
-			cells[i++] = white;
-	while (i < 20)
-			cells[i++] = empty;
-	while (i < 32)
-			cells[i++] = black;
-	return BoardState(Position(cells), Role::White);
-}
-
 typedef BoardState (*PlayerFunction)(BoardState);
 
 void setPlayers(PlayerFunction players[2]) {
@@ -215,7 +200,7 @@ int main() {
 	std::cout << "<DIRECTION> is 'left', 'right', 'left-back' or 'right-back'\n";
 	std::cout << "<COUNT> tells the king how many motions to make after its first target.\n";
 	std::cout << "You can enter 'quit' to go out.\n\n";
-	BoardState board = initialBoard();
+	BoardState board = BoardState::initialBoard();
 	printBoard(board);
 	while (!board.lost()) {
 		board = players[board.color()](board);

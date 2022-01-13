@@ -111,27 +111,12 @@ Position::Motion Position::accepts(Cell thru, Direction direction, Role color, b
 }
 
 bool Position::captures(Cell thru, Direction direction, Role color, bool king) const {
+	if (thru.promotion(color))
+		king = true;
 	while (true)
 		switch (accepts(thru, direction, color, king)) {
 		case Slow: if (king) {thru = thru.neighbour(direction); break;}
 		case Block: return false;
 		case Capture: return true;
 		}
-}
-
-bool Position::legal() const {
-	for (int i = 0; i < 4; ++i)
-		if (_cells[i].color == Role::Black && !_cells[i].king)
-			return false;
-	for (int i = 28; i < 32; ++i)
-		if (_cells[i].color == Role::White && !_cells[i].king)
-			return false;
-	bool empty = true;
-	for (int i = 0; i < 32; ++ i) {
-		if (_cells[i].color != Role::None)
-			empty = false;
-		if (_cells[i].ghost)
-			return false;
-	}
-	return !empty;
 }

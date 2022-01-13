@@ -32,8 +32,6 @@ public:
 	bool captures (Cell thru, Direction direction) const;   // Дорога содержит взятия.
 	Motion accepts (Cell thru, Direction direction, Role color, bool king) const;
 	bool captures (Cell thru, Direction direction, Role color, bool king) const;
-
-	bool legal() const;  // Позиция может иметь место перед ходом или после хода.
 private:
 	Stone _cells[32];
 };

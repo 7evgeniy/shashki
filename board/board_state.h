@@ -22,7 +22,7 @@
 class BoardState {
 public:
 	static bool apply (BoardState& board, std::vector<Cell> action);
-	static std::vector<std::vector<Cell>> explore (const BoardState& board);
+	static BoardState initialBoard();
 public:
 	BoardState ();
 	BoardState (const Position &position, Role start);
