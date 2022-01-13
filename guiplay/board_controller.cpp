@@ -96,8 +96,11 @@ std::shared_ptr<Root<Cell>> BoardController::makeRoot(Cell at) const {
 			if (cell.valid()) {
 				for (Direction d: Direction::enumerate()) {
 					BoardState copy = board;
-					if (copy.control(cell.neighbour(d)))
-						move->appendHead(head, cell.neighbour(d));
+					Cell next = cell.neighbour(d);
+					if (copy.control(next)) {
+						next.setCapture(copy.capture());
+						move->appendHead(head, next);
+					}
 				}
 				if (board.control(Cell()))
 					move->appendHead(head, Cell());
@@ -112,20 +115,57 @@ std::shared_ptr<Root<Cell>> BoardController::makeRoot(Cell at) const {
 	return move;
 }
 
-// Оставить лишь те вершины, в которые можно попасть через поле at.
-QList<Root<Cell>::Iterator> BoardController::restrictHeads(Cell at) const {
-	QList<Root<Cell>::Iterator> result;
-	if (!_move || !at.valid())
-		return result;
-	for (Root<Cell>::Iterator head: _move->heads()) {
-		QList<Cell> move = _move->makeList(head);
-		if (!move[_count].valid() && move[_count-1] == at)
-			result.append(head);
-		for (int i = _count; i < move.size(); ++ i)
-			if (move[i] == at)
-				result.append(head);
+int captureCount(QList<Cell> action, Cell at) {
+	int count = 0;
+	for (int i = 0; i < action.size(); ++ i) {
+		if (action[i] == at)
+			break;
+		if (action[i].capture())
+			++ count;
 	}
-	return result;
+	return count;
+}
+
+class HeadData {
+public:
+	void appendHead(Root<Cell>::Iterator head, int count) {
+		heads.append(head);
+		counts.append(count);
+	}
+
+	QList<Root<Cell>::Iterator> extractMinCount() {
+		int minCount = -1;
+		for (int count: counts)
+			if (minCount < 0 || minCount > count)
+				minCount = count;
+		QList<Root<Cell>::Iterator> extraction;
+		for (int i = 0; i < heads.size(); ++ i)
+			if (counts[i] == minCount)
+				extraction.append(heads[i]);
+		return extraction;
+	}
+
+private:
+	QList<Root<Cell>::Iterator> heads;
+	QList<int> counts;
+};
+
+// Оставить лишь те вершины, в которые можно попасть через поле at.
+// Из них взять лишь вершины, где шашка доходит до at за минимальное число взятий.
+QList<Root<Cell>::Iterator> BoardController::restrictHeads(Cell at) const {
+	HeadData data;
+	if (!_move || !at.valid())
+		return QList<Root<Cell>::Iterator>();
+	for (Root<Cell>::Iterator head: _move->heads()) {
+		QList<Cell> action = _move->makeList(head);
+		int count = captureCount(action, at);
+		if (!action[_count].valid() && action[_count-1] == at)
+			data.appendHead(head, count);
+		for (int i = _count; i < action.size(); ++ i)
+			if (action[i] == at)
+				data.appendHead(head, count);
+	}
+	return data.extractMinCount();
 }
 
 // Общий префикс для всех вершин; добавить завершение хода, если уместно.
