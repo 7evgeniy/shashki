@@ -195,7 +195,7 @@ void setPlayers(PlayerFunction players[2]) {
 			human = Role::White;
 	} while (human == Role::None);
 	players[human] = playHuman;
-	players[human.opposite()] = playHuman;
+	players[human.opposite()] = playAutomatic;
 }
 
 int main() {
