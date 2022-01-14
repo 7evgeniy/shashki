@@ -172,7 +172,7 @@ BoardState playHuman(BoardState initial) {
 }
 
 BoardState playAutomatic(BoardState initial) {
-	std::clog << "Waiting till the move is computed... ";
+	std::cout << "Waiting till the move is computed... " << std::flush;
 	BoardState::apply(initial, minimax(initial));
 	std::cout << "The computer has moved.\n";
 	return initial;
