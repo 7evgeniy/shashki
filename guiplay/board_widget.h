@@ -28,10 +28,6 @@ public:
 	QList<Cell> green() const;
 	QList<Cell> blue() const;
 	Cell border() const;
-signals:
-	void clicked(Cell cell);
-	void hovered(Cell cell);
-	void reset();
 protected:
 	void keyPressEvent(QKeyEvent *e);
 	void mousePressEvent(QMouseEvent *e);

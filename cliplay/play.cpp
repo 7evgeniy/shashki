@@ -178,7 +178,7 @@ BoardState playAutomatic(BoardState initial) {
 	return initial;
 }
 
-typedef BoardState (*PlayerFunction)(BoardState);
+using PlayerFunction = BoardState (*)(BoardState);
 
 void setPlayers(PlayerFunction players[2]) {
 	Role human;

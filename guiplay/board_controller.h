@@ -20,7 +20,7 @@ public:
 	void hover(Cell at) const;
 	void reset();
 signals:
-	void moved(QList<Cell> move);
+	void moved(std::vector<Cell> action);
 private:
 	std::shared_ptr<Root<Cell>> makeRoot(Cell at) const;
 	QList<Cell> readAction(Root<Cell>::Iterator head) const;

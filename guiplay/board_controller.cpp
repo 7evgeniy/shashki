@@ -47,9 +47,11 @@ void BoardController::click(Cell at) {
 				_control->markBlue(QList<Cell>());
 			}
 			else {
-				BoardState::apply(_board, convertArray(prefix));
+				std::vector<Cell> action = convertArray(prefix);
+				BoardState::apply(_board, action);
 				_control->setPosition(_board.position());
 				reset();
+				emit moved(action);
 			}
 		}
 		else
