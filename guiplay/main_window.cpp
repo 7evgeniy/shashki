@@ -21,6 +21,7 @@ MainWindow::MainWindow() {
 	connect(&_watcher, finished, this, &MainWindow::automaticDone);
 
 	_toggle = new QAction(QIcon(":/board.png"), "Игра вкл/выкл", this);
+	_drop = new QAction(QIcon(":/drop.png"), "Сбросить игру", this);
 	_modes = new QComboBox;
 	_heads = new QSpinBox;
 	_flip = new QAction(QIcon(":/flip.png"), "Перевернуть доску", this);
@@ -37,26 +38,33 @@ MainWindow::MainWindow() {
 	_modes->addItem("Человек vs. машина", HumanVsAutomatic);
 	_modes->addItem("Машина vs. человек", AutomaticVsHuman);
 	_modes->addItem("Человек vs. человек", HumanVsHuman);
+	_modes->setFocusPolicy(Qt::NoFocus);
 	_heads->setRange(1, 1);
 	_heads->setSuffix(" из 1");
+	_heads->setToolTip("№ партии");
+	_heads->setFocusPolicy(Qt::NoFocus);
 	_prev->setToolTip("Предыдущая позиция");
 	_next->setToolTip("Следующая позиция");
 	_first->setToolTip("Начальная позиция");
 	_last->setToolTip("Последняя позиция");
-	_score->setFixedWidth(_score->fontMetrics().boundingRect("Победа чёрных").width());
+	_count->setToolTip("Число шашек");
 
-	QToolBar *only = addToolBar("");
+	QToolBar *only = addToolBar("tb");
+	QWidget *stretch = new QWidget;
+	stretch->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 	only->addAction(_toggle);
+	only->addAction(_drop);
 	only->addWidget(_modes);
 	only->addWidget(_heads);
 	only->addAction(_flip);
 	only->addAction(_cut);
+	only->addWidget(_score);
 	only->addAction(_first);
 	only->addAction(_prev);
-	only->addWidget(_score);
 	only->addAction(_next);
 	only->addAction(_last);
 	only->addWidget(_count);
+	only->addWidget(stretch);
 	only->addAction(_quit);
 
 	using ComboSignalInt = void (QComboBox::*)(int);
@@ -64,6 +72,7 @@ MainWindow::MainWindow() {
 	ComboSignalInt cic = &QComboBox::currentIndexChanged;
 	SpinSignalInt vc = &QSpinBox::valueChanged;
 	connect(_toggle, &QAction::triggered, this, &MainWindow::updateInputState);
+	connect(_drop, &QAction::triggered, this, &MainWindow::drop);
 	connect(_modes, cic, this, &MainWindow::updateInputState);
 	connect(_heads, vc, this, &MainWindow::updateInputState);
 	connect(_flip, &QAction::triggered, this, &MainWindow::flip);
@@ -106,7 +115,10 @@ QString score(Role color, bool lost) {
 }
 
 void MainWindow::updateInputState() {
+	_count->setEnabled(_toggle->isChecked());
+	_score->setEnabled(_toggle->isChecked());
 	_modes->setEnabled(!_toggle->isChecked());
+	_drop->setEnabled(!_game.empty());
 	_cut->setEnabled(_toggle->isChecked() && _depth != 0);
 	_head = _heads->value()-1;
 	_first->setEnabled(_game.length(_head) != _depth+1);
@@ -116,10 +128,10 @@ void MainWindow::updateInputState() {
 	BoardState board = _game.at(_head, _depth);
 	int white = board.position().stock(Role::White).size();
 	int black = board.position().stock(Role::Black).size();
-	_count->setText(QString("Число шашек %1:%2").arg(white).arg(black));
+	_count->setText(QString("%1:%2").arg(white).arg(black));
 	_score->setText(score(board.color(), board.lost()));
-	_automatic[Role::White] = AutomaticVsHuman & _modes->currentIndex();
-	_automatic[Role::Black] = HumanVsAutomatic & _modes->currentIndex();
+	_automatic[Role::White] = AutomaticVsHuman & _modes->currentData().toInt();
+	_automatic[Role::Black] = HumanVsAutomatic & _modes->currentData().toInt();
 	bool enabled = _depth == 0 && !_game.at(_head, 0).lost() && _toggle->isChecked();
 	bool controlled = enabled && !_automatic[board.color()];
 	_central->setEnabled(enabled);
@@ -154,6 +166,14 @@ void MainWindow::goStart() {_depth = _game.length(_head); updateInputState();}
 void MainWindow::goFinish() {_depth = 0; updateInputState();}
 
 void MainWindow::flip() {_central->setFlipped(!_central->flipped());}
+
+void MainWindow::drop() {
+	_game = Game();
+	_head = _depth = 0;
+	_buffer.clear();
+	_toggle->setChecked(false);
+	updateInputState();
+}
 
 void MainWindow::cut() {
 	_game.cut(_head, _depth);

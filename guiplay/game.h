@@ -8,6 +8,7 @@
 class Game {
 public:
 	Game();
+	bool empty() const;
 	int length(int head) const;
 	BoardState at(int head, int depth) const;
 	void cut(int head, int depth);

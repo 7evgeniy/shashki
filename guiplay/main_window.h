@@ -25,6 +25,7 @@ public:
 	void playHuman(BoardState board);
 	void playAutomatic(BoardState board);
 public:
+	void drop();
 	void goBack();
 	void goForth();
 	void goStart();
@@ -40,6 +41,7 @@ private:
 	static const int AutomaticVsHuman = 2;
 private:
 	QAction *_toggle;
+	QAction *_drop;
 	QComboBox *_modes;
 	QSpinBox *_heads;
 	QAction *_flip;

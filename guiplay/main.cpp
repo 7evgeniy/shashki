@@ -1,12 +1,10 @@
 #include <QApplication>
-#include "board_widget.h"
+#include "main_window.h"
 #include "board_controller.h"
 
 int main(int argc, char **argv) {
 	QApplication app(argc, argv);
-	BoardWidget w;
-	BoardController c;
-	w.setController(&c);
+	MainWindow w;
 	w.show();
 	return app.exec();
 }
