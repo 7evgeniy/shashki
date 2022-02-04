@@ -8,7 +8,7 @@
 BoardWidget::Environment BoardWidget::_env;
 
 BoardWidget::BoardWidget() {
-	_flipped = false;
+	_flipped = _active = false;
 	setFocusPolicy(Qt::ClickFocus);
 	setMouseTracking(true);
 	setMinimumSize(400, 400);
@@ -30,6 +30,8 @@ Position& BoardWidget::position() {return _position;}
 void BoardWidget::setPosition(const Position &position) {_position = position; update();}
 void BoardWidget::setFlipped(bool is) {_flipped = is; update();}
 bool BoardWidget::flipped() const {return _flipped;}
+void BoardWidget::setActive(bool is) {_active = is; update();}
+bool BoardWidget::active() const {return _active;}
 
 void BoardWidget::markBlue(QList<Cell> blue) {_blue = blue; update();}
 void BoardWidget::markGreen(QList<Cell> green) {_green = green; update();}
@@ -86,7 +88,7 @@ void BoardWidget::paintEvent(QPaintEvent *) {
 				drawStone(painter, QPoint(col*100 + 50, row*100 + 50), cell);
 		}
 	}
-	if (!isEnabled()) {
+	if (!_active) {
 		painter.setBrush(_env.ShadowBrush);
 		painter.drawRect(0, 0, 800, 800);
 	}

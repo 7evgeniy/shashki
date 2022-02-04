@@ -50,6 +50,7 @@ MainWindow::MainWindow() {
 	_count->setToolTip("Число шашек");
 
 	QToolBar *only = addToolBar("tb");
+	only->setObjectName("tb");
 	QWidget *stretch = new QWidget;
 	stretch->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 	only->addAction(_toggle);
@@ -71,7 +72,7 @@ MainWindow::MainWindow() {
 	using SpinSignalInt = void (QSpinBox::*)(int);
 	ComboSignalInt cic = &QComboBox::currentIndexChanged;
 	SpinSignalInt vc = &QSpinBox::valueChanged;
-	connect(_toggle, &QAction::triggered, this, &MainWindow::updateInputState);
+	connect(_toggle, &QAction::triggered, this, &MainWindow::toggle);
 	connect(_drop, &QAction::triggered, this, &MainWindow::drop);
 	connect(_modes, cic, this, &MainWindow::updateInputState);
 	connect(_heads, vc, this, &MainWindow::updateInputState);
@@ -120,7 +121,6 @@ void MainWindow::updateInputState() {
 	_modes->setEnabled(!_toggle->isChecked());
 	_drop->setEnabled(!_game.empty());
 	_cut->setEnabled(_toggle->isChecked() && _depth != 0);
-	_head = _heads->value()-1;
 	_first->setEnabled(_game.length(_head) != _depth+1);
 	_prev->setEnabled(_game.length(_head) != _depth+1);
 	_next->setEnabled(_depth != 0);
@@ -132,25 +132,22 @@ void MainWindow::updateInputState() {
 	_score->setText(score(board.color(), board.lost()));
 	_automatic[Role::White] = AutomaticVsHuman & _modes->currentData().toInt();
 	_automatic[Role::Black] = HumanVsAutomatic & _modes->currentData().toInt();
-	bool enabled = _depth == 0 && !_game.at(_head, 0).lost() && _toggle->isChecked();
-	bool controlled = enabled && !_automatic[board.color()];
-	_central->setEnabled(enabled);
+	bool active = _depth == 0 && !_game.at(_head, 0).lost() && _toggle->isChecked();
+	bool controlled = active && !_automatic[board.color()];
+	_central->setActive(active);
 	_central->setController(controlled ? _control : nullptr);
-	_central->setPosition(board.position());
-	if (enabled && !_buffer.empty())
-		receiveAction(_buffer);
-}
-
-void MainWindow::receiveAction(std::vector<Cell> action) {
-	if (_depth == 0 && _toggle->isChecked()) {
+	if (active && !_buffer.empty()) {
+		board = _game.evolve(_head, _buffer);
 		_buffer.clear();
-		BoardState board = _game.evolve(_head, action);
-		updateInputState();
 		if (_automatic[board.color()])
 			playAutomatic(board);
 	}
-	else
-		_buffer = action;
+	_central->setPosition(board.position());
+}
+
+void MainWindow::receiveAction(std::vector<Cell> action) {
+	_buffer = action;
+	updateInputState();
 }
 
 void MainWindow::playAutomatic(BoardState board) {
@@ -167,6 +164,12 @@ void MainWindow::goFinish() {_depth = 0; updateInputState();}
 
 void MainWindow::flip() {_central->setFlipped(!_central->flipped());}
 
+void MainWindow::toggle(bool on) {
+	if (on && _game.empty() && _automatic[Role::White])
+		playAutomatic(BoardState::initialBoard());
+	updateInputState();
+}
+
 void MainWindow::drop() {
 	_game = Game();
 	_head = _depth = 0;
@@ -179,7 +182,11 @@ void MainWindow::cut() {
 	_game.cut(_head, _depth);
 	_heads->setMaximum(_heads->maximum()+1);
 	_heads->setSuffix(QString(" из %1").arg(_heads->maximum()));
+	_head = _heads->maximum()-1;
 	_depth = 0;
+	_buffer.clear();
+	if (_automatic[_game.at(_head, _depth).color()])
+		playAutomatic(_game.at(_head, _depth));
 	_heads->setValue(_heads->maximum()-1);
 }
 

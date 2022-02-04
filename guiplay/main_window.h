@@ -22,9 +22,9 @@ public:
 	MainWindow();
 	void updateInputState();
 	void receiveAction(std::vector<Cell> action);
-	void playHuman(BoardState board);
 	void playAutomatic(BoardState board);
 public:
+	void toggle(bool on);
 	void drop();
 	void goBack();
 	void goForth();
@@ -63,6 +63,7 @@ private:
 	Game _game;    // дерево игры: позиции после каждого полного полухода.
 	int _head;     // текущая вершина в дереве позиций, то есть текущая игра.
 	int _depth;    // номер текущей позиции в игре, считая от вершины дерева.
+	bool _ready;   // «нужно запустить вычисление следующего хода»
 	std::vector<Cell> _buffer;
 	bool _automatic[2];
 };

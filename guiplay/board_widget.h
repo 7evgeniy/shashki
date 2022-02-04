@@ -20,11 +20,13 @@ public:
 	Position& position();
 	void setPosition(const Position &position);
 	void setFlipped(bool is);
+	void setActive(bool is);
 	void markGreen(QList<Cell> green);
 	void markBlue(QList<Cell> blue);
 	void markBorder(Cell border);
 	void unmark();
 	bool flipped() const;
+	bool active() const;
 	QList<Cell> green() const;
 	QList<Cell> blue() const;
 	Cell border() const;
@@ -61,6 +63,7 @@ private:
 	QList<Cell> _blue;     // поля, помечаемые цветом обработки
 	Cell _border;   // поле, вокруг которого рисуется рамочка
 	bool _flipped;  // «изображение доски перевёрнуто»
+	bool _active;   // «изображение доски активно»
 	Cell _hover;    // уже был отправлен сигнал, что указатель мыши над полем
 };
 
