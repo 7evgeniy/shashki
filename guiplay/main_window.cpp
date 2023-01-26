@@ -20,9 +20,10 @@ MainWindow::MainWindow() {
 	auto finished = &QFutureWatcher<std::vector<Cell>>::finished;
 	connect(&_watcher, finished, this, &MainWindow::automaticDone);
 
-	_toggle = new QAction(QIcon(":/board.png"), "Игра вкл/выкл", this);
-	_drop = new QAction(QIcon(":/drop.png"), "Сбросить игру", this);
-	_modes = new QComboBox;
+	_white = new QAction(QIcon(":/board.png"), "Белые — автоматически", this);
+	_black = new QAction(QIcon(":/board.png"), "Чёрные — автоматически", this);
+	_white->setCheckable(true);
+	_black->setCheckable(true);
 	_heads = new QSpinBox;
 	_flip = new QAction(QIcon(":/flip.png"), "Перевернуть доску", this);
 	_cut = new QAction(QIcon(":/cut.png"), "Обрезать игру", this);
@@ -34,14 +35,9 @@ MainWindow::MainWindow() {
 	_count = new QLabel;
 	_quit = new QAction(QIcon(":/quit.png"), "Выход", this);
 
-	_toggle->setCheckable(true);
-	_modes->addItem("Человек vs. машина", HumanVsAutomatic);
-	_modes->addItem("Машина vs. человек", AutomaticVsHuman);
-	_modes->addItem("Человек vs. человек", HumanVsHuman);
-	_modes->setFocusPolicy(Qt::NoFocus);
 	_heads->setRange(1, 1);
 	_heads->setSuffix(" из 1");
-	_heads->setToolTip("№ партии");
+	_heads->setToolTip("№ игровой ветви");
 	_heads->setFocusPolicy(Qt::NoFocus);
 	_prev->setToolTip("Предыдущая позиция");
 	_next->setToolTip("Следующая позиция");
@@ -53,9 +49,8 @@ MainWindow::MainWindow() {
 	only->setObjectName("tb");
 	QWidget *stretch = new QWidget;
 	stretch->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-	only->addAction(_toggle);
-	only->addAction(_drop);
-	only->addWidget(_modes);
+	only->addAction(_white);
+	only->addAction(_black);
 	only->addWidget(_heads);
 	only->addAction(_flip);
 	only->addAction(_cut);
@@ -68,13 +63,10 @@ MainWindow::MainWindow() {
 	only->addWidget(stretch);
 	only->addAction(_quit);
 
-	using ComboSignalInt = void (QComboBox::*)(int);
 	using SpinSignalInt = void (QSpinBox::*)(int);
-	ComboSignalInt cic = &QComboBox::currentIndexChanged;
 	SpinSignalInt vc = &QSpinBox::valueChanged;
-	connect(_toggle, &QAction::triggered, this, &MainWindow::toggle);
-	connect(_drop, &QAction::triggered, this, &MainWindow::drop);
-	connect(_modes, cic, this, &MainWindow::updateInputState);
+	connect(_white, &QAction::triggered, this, &MainWindow::white);
+	connect(_black, &QAction::triggered, this, &MainWindow::black);
 	connect(_heads, vc, this, &MainWindow::updateInputState);
 	connect(_flip, &QAction::triggered, this, &MainWindow::flip);
 	connect(_cut, &QAction::triggered, this, &MainWindow::cut);
@@ -91,6 +83,7 @@ MainWindow::MainWindow() {
 	setWindowTitle("Шашки");
 	restoreSettings();
 
+	_automatic[Role::White] = _automatic[Role::Black] = false;
 	_depth = _head = 0;
 	updateInputState();
 }
@@ -116,11 +109,6 @@ QString score(Role color, bool lost) {
 }
 
 void MainWindow::updateInputState() {
-	_count->setEnabled(_toggle->isChecked());
-	_score->setEnabled(_toggle->isChecked());
-	_modes->setEnabled(!_toggle->isChecked());
-	_drop->setEnabled(!_game.empty());
-	_cut->setEnabled(_toggle->isChecked() && _depth != 0);
 	_first->setEnabled(_game.length(_head) != _depth+1);
 	_prev->setEnabled(_game.length(_head) != _depth+1);
 	_next->setEnabled(_depth != 0);
@@ -130,18 +118,13 @@ void MainWindow::updateInputState() {
 	int black = board.position().stock(Role::Black).size();
 	_count->setText(QString("%1:%2").arg(white).arg(black));
 	_score->setText(score(board.color(), board.lost()));
-	_automatic[Role::White] = AutomaticVsHuman & _modes->currentData().toInt();
-	_automatic[Role::Black] = HumanVsAutomatic & _modes->currentData().toInt();
-	bool active = _depth == 0 && !_game.at(_head, 0).lost() && _toggle->isChecked();
-	bool controlled = active && !_automatic[board.color()];
-	_central->setActive(active);
-	_central->setController(controlled ? _control : nullptr);
-	if (active && !_buffer.empty()) {
+	bool active = (_depth == 0 && !_game.at(_head, 0).lost());
+	if (active && !_buffer.empty()) {    // получен ход
 		board = _game.evolve(_head, _buffer);
 		_buffer.clear();
-		if (_automatic[board.color()])
-			playAutomatic(board);
+		requestAction(_game.at(_head, 0));
 	}
+	_central->setActive(active);
 	_central->setPosition(board.position());
 }
 
@@ -150,9 +133,18 @@ void MainWindow::receiveAction(std::vector<Cell> action) {
 	updateInputState();
 }
 
-void MainWindow::playAutomatic(BoardState board) {
-	_future = QtConcurrent::run(minimax, board);
-	_watcher.setFuture(_future);
+void MainWindow::requestAction(BoardState board) {
+	if (board.lost())
+		return;
+	if (_automatic[board.color()]) {
+		_central->setController(nullptr);
+		_future = QtConcurrent::run(minimax, board);
+		_watcher.setFuture(_future);
+	}
+	else {
+		_watcher.setFuture(QFuture<std::vector<Cell>>());
+		_central->setController(_control);
+	}
 }
 
 void MainWindow::automaticDone() {receiveAction(_future.result());}
@@ -164,18 +156,18 @@ void MainWindow::goFinish() {_depth = 0; updateInputState();}
 
 void MainWindow::flip() {_central->setFlipped(!_central->flipped());}
 
-void MainWindow::toggle(bool on) {
-	if (on && _game.empty() && _automatic[Role::White])
-		playAutomatic(BoardState::initialBoard());
-	updateInputState();
+void MainWindow::white(bool on) {
+	BoardState board = _game.empty() ? BoardState::initialBoard() : _game.at(_head, 0);
+	_automatic[Role::White] = on;
+	if (board.color() == Role::White)
+		requestAction(board);
 }
 
-void MainWindow::drop() {
-	_game = Game();
-	_head = _depth = 0;
-	_buffer.clear();
-	_toggle->setChecked(false);
-	updateInputState();
+void MainWindow::black(bool on) {
+	BoardState board = _game.empty() ? BoardState::initialBoard() : _game.at(_head, 0);
+	_automatic[Role::White] = on;
+	if (board.color() == Role::Black)
+		requestAction(board);
 }
 
 void MainWindow::cut() {
@@ -185,8 +177,6 @@ void MainWindow::cut() {
 	_head = _heads->maximum()-1;
 	_depth = 0;
 	_buffer.clear();
-	if (_automatic[_game.at(_head, _depth).color()])
-		playAutomatic(_game.at(_head, _depth));
 	_heads->setValue(_heads->maximum()-1);
 }
 

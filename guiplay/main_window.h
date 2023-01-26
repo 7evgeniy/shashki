@@ -22,10 +22,9 @@ public:
 	MainWindow();
 	void updateInputState();
 	void receiveAction(std::vector<Cell> action);
-	void playAutomatic(BoardState board);
-public:
-	void toggle(bool on);
-	void drop();
+	void requestAction(BoardState board);
+	void white(bool on);
+	void black(bool on);
 	void goBack();
 	void goForth();
 	void goStart();
@@ -36,13 +35,8 @@ public:
 	void restoreSettings();
 	void automaticDone();
 private:
-	static const int HumanVsHuman = 0;
-	static const int HumanVsAutomatic = 1;
-	static const int AutomaticVsHuman = 2;
-private:
-	QAction *_toggle;
-	QAction *_drop;
-	QComboBox *_modes;
+	QAction *_white;
+	QAction *_black;
 	QSpinBox *_heads;
 	QAction *_flip;
 	QAction *_cut;
@@ -58,13 +52,12 @@ private:
 	BoardController *_control;
 	QFutureWatcher<std::vector<Cell>> _watcher;
 	QFuture<std::vector<Cell>> _future;
-
 private:
 	Game _game;    // дерево игры: позиции после каждого полного полухода.
 	int _head;     // текущая вершина в дереве позиций, то есть текущая игра.
 	int _depth;    // номер текущей позиции в игре, считая от вершины дерева.
 	bool _ready;   // «нужно запустить вычисление следующего хода»
-	std::vector<Cell> _buffer;
+	std::vector<Cell> _buffer;   // буфер ходов, полученных со стороны.
 	bool _automatic[2];
 };
 
