@@ -5,6 +5,7 @@
 #include "../board/board_state.h"
 #include "../board/cell.h"
 #include "game.h"
+#include "action_type.h"
 #include <QList>
 #include <QFutureWatcher>
 #include <QFuture>
@@ -21,8 +22,9 @@ class MainWindow : public QMainWindow {
 public:
 	MainWindow();
 	void updateInputState();
-	void receiveAction(std::vector<Cell> action);
+	void receiveAction(std::vector<Cell> action, ActionType type);
 	void requestAction(BoardState board);
+	void fork();
 	void white(bool on);
 	void black(bool on);
 	void goBack();
@@ -35,6 +37,7 @@ public:
 	void restoreSettings();
 	void automaticDone();
 private:
+	QAction *_fork;
 	QAction *_white;
 	QAction *_black;
 	QSpinBox *_heads;
@@ -58,6 +61,7 @@ private:
 	int _depth;    // номер текущей позиции в игре, считая от вершины дерева.
 	bool _ready;   // «нужно запустить вычисление следующего хода»
 	std::vector<Cell> _buffer;   // буфер ходов, полученных со стороны.
+	ActionType _receiver;
 	bool _automatic[2];
 };
 
