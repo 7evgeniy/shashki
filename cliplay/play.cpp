@@ -72,21 +72,21 @@ int parseInteger(std::string word) {
 
 class MotionException {
 public:
-	MotionException(std::string s, bool p = false) : str(s), sad_print(p) {}
+	MotionException(std::string s, bool ia = false) : str(s), interactivity(ia) {}
 	std::string str;
-	bool sad_print;
+	bool interactivity;
 };
 
 BoardState hungryMotion(BoardState initial, std::istringstream &in, int bufsize) {
 	std::string buf;
-	bool sad_print = false;
+	bool interactive = false;
 	while (true) {
 		std::string w;
 		in >> w;
 		Direction d = parseDirection(w, initial.color());
 		bool king = initial.position().king(initial.place());
 		if (!initial.control(initial.place().neighbour(d)))
-			throw MotionException("wrong direction (in hungry)", sad_print);
+			throw MotionException("wrong direction (in hungry)", interactive);
 		while (!initial.capture())
 			initial.control(initial.place().neighbour(d));
 		int count = 1;
@@ -104,7 +104,7 @@ BoardState hungryMotion(BoardState initial, std::istringstream &in, int bufsize)
 			return initial;
 		int g = in.tellg();
 		if (g == bufsize || g < 0) {
-			sad_print = true;
+			interactive = true;
 			printBoard(initial);
 			std::cout << "then: ";
 			std::getline(std::cin, buf);
@@ -162,7 +162,7 @@ BoardState playHuman(BoardState initial) {
 			else
 				board = hungryMotion(board, in, buf.size());
 		} catch(MotionException e) {
-			if (e.sad_print)
+			if (e.interactivity)
 				printBoard(board);
 			std::cout << "Aborted on the faulty input: " << e.str << ".\n";
 			complete = false;
